@@ -5,6 +5,12 @@ export interface IWebSocketService {
     disconect(): void;
     onopen: (() => void) | null;
     onclose: (() => void) | null;
+    getReadyState(): number | undefined;
+    send(message:string): void;
+}
+
+export type TWebSocketMessage = {
+    message:string,
 }
 
 export class WebSocketService implements IWebSocketService {
@@ -13,9 +19,30 @@ export class WebSocketService implements IWebSocketService {
     onopen: (() => void) | null;
     onclose: (() => void) | null;
 
+    send(message:string): void {
+
+        const ws = this.webSocket;
+        if (ws === null) return;
+        
+        const wsmess:TWebSocketMessage = {
+            message,
+        }
+
+        ws.send(JSON.stringify(wsmess));
+
+    }
+
     addEventListener(): void {}
 
     emit() {}
+
+    /**
+     *
+     * @returns number | undefined
+     */
+    getReadyState() {
+        return this.webSocket?.readyState;
+    }
 
     disconect(): void {
         if (

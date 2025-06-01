@@ -31,25 +31,35 @@ export function WebSocketConnection() {
 
     return (
         <div>
-            <button
-                disabled={connectButtonDisabled}
-                onClick={() => {
-                    console.log("action::connect");
-                    webSocketService.connect();
-                }}
-            >
-                connect
-            </button>
-            <button
-                disabled={disconButtonDisabled}
-                onClick={() => {
-                    console.log("action::disconect");
-                    webSocketService.disconect();
-                    // webSocketService.
-                }}
-            >
-                disconect
-            </button>
+            <div>
+                <button onClick={() => {
+                    console.log('action::send-message');
+                    // #hardcode
+                    webSocketService.send('hello from frontend any text');
+                }}>send message</button>
+            </div>
+            <div>
+
+                <button
+                    disabled={connectButtonDisabled}
+                    onClick={() => {
+                        console.log("action::connect");
+                        webSocketService.connect();
+                    }}
+                >
+                    connect
+                </button>
+                <button
+                    disabled={disconButtonDisabled}
+                    onClick={() => {
+                        console.log("action::disconect");
+                        webSocketService.disconect();
+                        // webSocketService.
+                    }}
+                >
+                    disconect
+                </button>
+            </div>
             <p>web-socket connection</p>
         </div>
     );
