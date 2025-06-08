@@ -13,6 +13,8 @@ export function WebSocketConnection() {
             : true,
     );
 
+    const [sendButtonState, setSendButtonState] = useState(false);
+
     useEffect(() => {
         console.log("test-component::mounted");
 
@@ -26,39 +28,61 @@ export function WebSocketConnection() {
             setDisconButtonDisabled(true);
         };
 
+        webSocketService.addEventListener("close", () => {
+            setSendButtonState(true);
+        });
+
+        webSocketService.addEventListener("open", () => {
+            setSendButtonState(false);
+        });
+
         return () => console.log("test-component::UnMounted");
     }, []);
+
+    const { messageText } = useMainContext();
 
     return (
         <div>
             <div>
-                <button onClick={() => {
-                    console.log('action::send-message');
-                    // #hardcode
-                    webSocketService.send('hello from frontend any text');
-                }}>send message</button>
+                <button
+                    disabled={sendButtonState}
+                    onClick={() => {
+                        console.log("action::send-message");
+                        // #hardcode
+                        webSocketService.send(
+                            `hello from frontend. this is my own test text: ${messageText}`,
+                        );
+                    }}
+                >
+                    send message
+                </button>
             </div>
             <div>
-
-                <button
-                    disabled={connectButtonDisabled}
-                    onClick={() => {
-                        console.log("action::connect");
-                        webSocketService.connect();
-                    }}
-                >
-                    connect
-                </button>
-                <button
-                    disabled={disconButtonDisabled}
-                    onClick={() => {
-                        console.log("action::disconect");
-                        webSocketService.disconect();
-                        // webSocketService.
-                    }}
-                >
-                    disconect
-                </button>
+                {connectButtonDisabled ? (
+                    disconButtonDisabled ? (
+                        <></>
+                    ) : (
+                        <button
+                            disabled={disconButtonDisabled}
+                            onClick={() => {
+                                console.log("action::disconect");
+                                webSocketService.disconect();
+                            }}
+                        >
+                            disconect
+                        </button>
+                    )
+                ) : (
+                    <button
+                        disabled={connectButtonDisabled}
+                        onClick={() => {
+                            console.log("action::connect");
+                            webSocketService.connect();
+                        }}
+                    >
+                        connect
+                    </button>
+                )}
             </div>
             <p>web-socket connection</p>
         </div>

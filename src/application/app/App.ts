@@ -1,4 +1,3 @@
-
 export type TEventListenerParam = Record<string, Record<string, string>>;
 
 export type TMyAppEventListener = (data: TEventListenerParam) => void;

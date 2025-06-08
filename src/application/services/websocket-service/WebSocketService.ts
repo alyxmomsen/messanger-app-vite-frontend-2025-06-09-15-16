@@ -1,22 +1,22 @@
 export interface IWebSocketService {
     /**
      * это свойство подлежит сокрытию.
-     * пока что оно в интерфейсе, но 
+     * пока что оно в интерфейсе, но
      * это временно
      */
     webSocket: WebSocket | null; // #temp
     connect(): void;
-    addEventListener(): void;
+    addEventListener(eventType: string, eventListener: () => void): void;
     disconect(): void;
     onopen: (() => void) | null;
     onclose: (() => void) | null;
     getReadyState(): number | undefined;
-    send(message:string): void;
+    send(message: string): void;
 }
 
 export type TWebSocketMessage = {
-    message:string,
-}
+    message: string;
+};
 
 export class WebSocketService implements IWebSocketService {
     webSocket: WebSocket | null;
@@ -24,22 +24,42 @@ export class WebSocketService implements IWebSocketService {
     onopen: (() => void) | null;
     onclose: (() => void) | null;
 
-    send(message:string): void {
+    send(message: string): void {
+        console.log("message sent");
 
         const ws = this.webSocket;
         if (ws === null) return;
-        
-        const wsmess:TWebSocketMessage = {
+
+        const wsmess: TWebSocketMessage = {
             message,
-        }
+        };
 
         ws.send(JSON.stringify(wsmess));
 
+        this.emit("sent");
     }
 
-    addEventListener(): void {}
+    addEventListener(eventType: string, eventListener: () => void): void {
+        console.log("event type: " + eventType);
 
-    emit() {}
+        const listeners = this.eventListenersPool.get(eventType);
+
+        if (listeners === undefined) {
+            this.eventListenersPool.set(eventType, []);
+        }
+
+        this.eventListenersPool.get(eventType)?.push(eventListener);
+    }
+
+    emit(eventType: string): void {
+        const listeners = this.eventListenersPool.get(eventType);
+
+        if (listeners === undefined) return;
+
+        listeners.forEach((elem) => elem());
+
+        console.log(eventType);
+    }
 
     /**
      *
@@ -80,6 +100,8 @@ export class WebSocketService implements IWebSocketService {
         this.webSocket.onopen = () => {
             if (this.onopen) {
                 this.onopen();
+
+                this.emit("open");
             }
 
             console.log("websocket::open");
@@ -94,6 +116,8 @@ export class WebSocketService implements IWebSocketService {
             // console.log((this.webSocket?.readyState)?.toString());
             // this.webSocket = null;
             this.onclose?.();
+
+            this.emit("close");
         };
 
         this.webSocket.onerror = () => {
@@ -101,7 +125,10 @@ export class WebSocketService implements IWebSocketService {
         };
     }
 
+    private eventListenersPool: Map<string, (() => void)[]>;
+
     constructor() {
+        this.eventListenersPool = new Map();
         this.onclose = null;
         this.onopen = null;
         this.webSocket = null;
