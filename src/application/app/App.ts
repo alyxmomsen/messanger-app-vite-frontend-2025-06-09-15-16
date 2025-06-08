@@ -1,7 +1,3 @@
-import {
-    WebSocketService,
-    type IWebSocketService,
-} from "../services/websocket-service/WebSocketService";
 
 export type TEventListenerParam = Record<string, Record<string, string>>;
 
@@ -14,7 +10,7 @@ export class MyApp {
 
     private eventListenersPool: Map<string, TMyAppEventListener[]>;
 
-    private webSocketService: IWebSocketService;
+    // private webSocketService: IWebSocketService;
 
     addEventListener(
         eventType: TMyAppEventType,
@@ -39,6 +35,6 @@ export class MyApp {
 
     constructor() {
         this.eventListenersPool = new Map();
-        this.webSocketService = new WebSocketService();
+        // this.webSocketService = new WebSocketService();
     }
 }

@@ -1,5 +1,10 @@
 export interface IWebSocketService {
-    webSocket: WebSocket | null;
+    /**
+     * это свойство подлежит сокрытию.
+     * пока что оно в интерфейсе, но 
+     * это временно
+     */
+    webSocket: WebSocket | null; // #temp
     connect(): void;
     addEventListener(): void;
     disconect(): void;
@@ -68,7 +73,9 @@ export class WebSocketService implements IWebSocketService {
             return;
         }
 
-        this.webSocket = new WebSocket("ws://127.0.0.1:8080");
+        const host = "ws://127.0.0.1:8080";
+        // const host = "ws://morally-rational-mastodon.cloudpub.ru:8080"; // #note :: dont work
+        this.webSocket = new WebSocket(host);
 
         this.webSocket.onopen = () => {
             if (this.onopen) {
