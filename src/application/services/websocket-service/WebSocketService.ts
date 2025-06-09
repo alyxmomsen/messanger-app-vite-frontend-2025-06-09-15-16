@@ -93,9 +93,12 @@ export class WebSocketService implements IWebSocketService {
             return;
         }
 
-        const host = "ws://127.0.0.1:8080";
+        const host = import.meta.env.VITE_BACKEND_HOST_URL;
+        console.log(host);
+        // const host = "ws://127.0.0.1:8080";
+        // const host = "ws://109.73.196.90:8080";
         // const host = "ws://morally-rational-mastodon.cloudpub.ru:8080"; // #note :: dont work
-        this.webSocket = new WebSocket(host);
+        this.webSocket = new WebSocket(host || "ws://127.0.0.1:8080");
 
         this.webSocket.onopen = () => {
             if (this.onopen) {
