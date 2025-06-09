@@ -13,8 +13,6 @@ export function WebSocketConnection() {
             : true,
     );
 
-    const [sendButtonState, setSendButtonState] = useState(false);
-
     useEffect(() => {
         console.log("test-component::mounted");
 
@@ -28,35 +26,12 @@ export function WebSocketConnection() {
             setDisconButtonDisabled(true);
         };
 
-        webSocketService.addEventListener("close", () => {
-            setSendButtonState(true);
-        });
-
-        webSocketService.addEventListener("open", () => {
-            setSendButtonState(false);
-        });
-
         return () => console.log("test-component::UnMounted");
     }, []);
 
-    const { messageText } = useMainContext();
-
     return (
         <div>
-            <div>
-                <button
-                    disabled={sendButtonState}
-                    onClick={() => {
-                        console.log("action::send-message");
-                        // #hardcode
-                        webSocketService.send(
-                            `hello from frontend. this is my own test text: ${messageText}`,
-                        );
-                    }}
-                >
-                    send message
-                </button>
-            </div>
+            <h4>web-socket connection</h4>
             <div>
                 {connectButtonDisabled ? (
                     disconButtonDisabled ? (
@@ -84,7 +59,6 @@ export function WebSocketConnection() {
                     </button>
                 )}
             </div>
-            <p>web-socket connection</p>
         </div>
     );
 }

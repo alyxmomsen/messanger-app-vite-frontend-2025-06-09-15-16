@@ -15,6 +15,8 @@ export const InputComponent = () => {
         });
 
         webSocketService.addEventListener("sent", () => {
+            // когда на сервисе произойдет событие,
+            // поле для ввода будет очищено
             setMessageText("");
         });
     }, []);
@@ -27,6 +29,13 @@ export const InputComponent = () => {
                 value={messageText}
                 onInput={(e) => {
                     setMessageText(e.currentTarget.value);
+                }}
+                onKeyUp={(e) => {
+                    const key = e.key;
+
+                    if (key !== "Enter" || messageText.length < 1) return;
+
+                    webSocketService.send(messageText);
                 }}
             />
         </div>
