@@ -6,16 +6,19 @@ export interface IWebSocketService {
      */
     webSocket: WebSocket | null; // #temp
     connect(): void;
-    addEventListener(eventType: string, eventListener: () => void): void;
+    addEventListener(
+        eventType: string,
+        eventListener: (payload: string) => void,
+    ): void;
     disconect(): void;
     onopen: (() => void) | null;
     onclose: (() => void) | null;
     getReadyState(): number | undefined;
-    send(message: string): void;
+    send(textContent: string): void;
 }
 
 export type TWebSocketMessage = {
-    message: string;
+    textContent: string;
 };
 
 export class WebSocketService implements IWebSocketService {
@@ -24,22 +27,25 @@ export class WebSocketService implements IWebSocketService {
     onopen: (() => void) | null;
     onclose: (() => void) | null;
 
-    send(message: string): void {
+    send(textContent: string): void {
         console.log("message sent");
 
         const ws = this.webSocket;
         if (ws === null) return;
 
         const wsmess: TWebSocketMessage = {
-            message,
+            textContent,
         };
 
         ws.send(JSON.stringify(wsmess));
 
-        this.emit("sent");
+        this.emit("sent", "");
     }
 
-    addEventListener(eventType: string, eventListener: () => void): void {
+    addEventListener(
+        eventType: string,
+        eventListener: (payload: string) => void,
+    ): void {
         console.log("event type: " + eventType);
 
         const listeners = this.eventListenersPool.get(eventType);
@@ -51,12 +57,13 @@ export class WebSocketService implements IWebSocketService {
         this.eventListenersPool.get(eventType)?.push(eventListener);
     }
 
-    emit(eventType: string): void {
+    emit(eventType: string, payload: string): void {
+        console.log({ payload });
         const listeners = this.eventListenersPool.get(eventType);
 
         if (listeners === undefined) return;
 
-        listeners.forEach((elem) => elem());
+        listeners.forEach((elem) => elem(payload));
 
         console.log(eventType);
     }
@@ -94,24 +101,25 @@ export class WebSocketService implements IWebSocketService {
         }
 
         const host = import.meta.env.VITE_BACKEND_HOST_URL;
-        console.log(host);
-        // const host = "ws://127.0.0.1:8080";
-        // const host = "ws://109.73.196.90:8080";
-        // const host = "ws://morally-rational-mastodon.cloudpub.ru:8080"; // #note :: dont work
+        console.log({ host });
         this.webSocket = new WebSocket(host || "ws://127.0.0.1:8080");
 
         this.webSocket.onopen = () => {
             if (this.onopen) {
                 this.onopen();
 
-                this.emit("open");
+                this.emit("open", "");
             }
 
             console.log("websocket::open");
         };
 
-        this.webSocket.onmessage = () => {
-            console.log("websocket::message");
+        this.webSocket.onmessage = (e) => {
+            console.log("websocket::message", e.data);
+
+            const data = e.data as string;
+
+            this.emit("message", data);
         };
 
         this.webSocket.onclose = () => {
@@ -120,7 +128,7 @@ export class WebSocketService implements IWebSocketService {
             // this.webSocket = null;
             this.onclose?.();
 
-            this.emit("close");
+            this.emit("close", "");
         };
 
         this.webSocket.onerror = () => {
@@ -128,7 +136,7 @@ export class WebSocketService implements IWebSocketService {
         };
     }
 
-    private eventListenersPool: Map<string, (() => void)[]>;
+    private eventListenersPool: Map<string, ((payload: string) => void)[]>;
 
     constructor() {
         this.eventListenersPool = new Map();

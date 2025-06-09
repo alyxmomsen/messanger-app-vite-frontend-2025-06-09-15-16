@@ -26,8 +26,6 @@ export function MainContextProvider({
     const [messageInputText, setMessageInputText] = useState("");
 
     useEffect(() => {
-        // wss.addEventListener()
-
         console.log("main_context::mounted");
 
         return () => {
