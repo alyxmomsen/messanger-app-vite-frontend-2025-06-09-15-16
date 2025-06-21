@@ -7,10 +7,18 @@ const MessageDisplay = () => {
     const [messages, setMesages] = useState<string[]>([]);
 
     useEffect(() => {
+        /**
+         *
+         */
         webSocketService.addEventListener("message", (payload) => {
             console.log(payload);
             setMesages((curr) => [...curr, payload]);
         });
+
+        /**
+         * пустой массив, переданый вторым параметром в данную функцию
+         * обеспечивает одноразовый вызов, при первом монтировании компонента
+         */
     }, []);
 
     return (

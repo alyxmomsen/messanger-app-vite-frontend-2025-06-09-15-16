@@ -21,6 +21,19 @@ export type TWebSocketMessage = {
     textContent: string;
 };
 
+// Такой же тип должен быть на бекенд 
+export type TWebsocketOutgoingMessage =
+    | {
+          type: "message";
+          payload: string;
+      }
+    | {
+          type: "command";
+          payload: {
+              action: { type: "insert"; payload: string };
+          };
+      };
+
 export class WebSocketService implements IWebSocketService {
     webSocket: WebSocket | null;
 
@@ -33,8 +46,9 @@ export class WebSocketService implements IWebSocketService {
         const ws = this.webSocket;
         if (ws === null) return;
 
-        const wsmess: TWebSocketMessage = {
-            textContent,
+        const wsmess: TWebsocketOutgoingMessage = {
+            type: "message",
+            payload: textContent,
         };
 
         ws.send(JSON.stringify(wsmess));
