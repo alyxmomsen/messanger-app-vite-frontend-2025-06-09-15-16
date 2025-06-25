@@ -35,20 +35,14 @@ export type TWebsocketOutgoingMessage =
 export type TIncommingMessageType = "simple-message" | "all-messages";
 
 export type TWebsocketIncomingMessage =
-    | ({
+    | {
           type: "message/current";
-          payload: null;
-      } & {
-          textContent: string;
-          //   connectionId: string;
-      })
-    | ({
+          payload: string;
+      }
+    | {
           type: "message/story";
           payload: WithId<Document>[];
-      } & {
-          textContent: string;
-          //   connectionId: string;
-      });
+      };
 
 // Webso
 
@@ -179,11 +173,13 @@ export class WebSocketService implements IWebSocketService {
                     // this.emit("message", parsedData);
                     return;
                 }
+
+                console.log({ parsedData });
+
+                this.emit("message/new", parsedData.payload);
             } catch (err) {
                 console.log("data parsing error: ", err);
             }
-
-            this.emit("message/new", stringdata);
         };
 
         this.webSocket.onclose = () => {
