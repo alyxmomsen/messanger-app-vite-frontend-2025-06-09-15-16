@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMainContext } from "../contexts/main-context/MainContext";
 
-export function WebSocketConnection() {
+export function WebsocketConnectionButton() {
     const { webSocketService } = useMainContext();
     const [connectButtonDisabled, setConnectButtonDisabled] = useState(false);
     const [disconButtonDisabled, setDisconButtonDisabled] = useState(
@@ -16,22 +16,23 @@ export function WebSocketConnection() {
     useEffect(() => {
         console.log("test-component::mounted");
 
-        webSocketService.onopen = () => {
+        webSocketService.addEventListener("open", (payload) => {
+            console.log(payload);
             setConnectButtonDisabled(true);
             setDisconButtonDisabled(false);
-        };
+        });
 
-        webSocketService.onclose = () => {
+        webSocketService.addEventListener("close", (payload) => {
+            console.log(payload);
             setConnectButtonDisabled(false);
             setDisconButtonDisabled(true);
-        };
+        });
 
         return () => console.log("test-component::UnMounted");
     }, []);
 
     return (
         <div>
-            <h4>web-socket connection</h4>
             <div>
                 {connectButtonDisabled ? (
                     disconButtonDisabled ? (

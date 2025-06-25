@@ -66,3 +66,16 @@ button:focus-visible {
         background-color: #f9f9f9;
     }
 }
+
+.flex {
+    display: flex;
+}
+
+.justify--right {
+    justify-content: space-between;
+    align-items: center;
+}
+
+.gap {
+    gap: 9px;
+}

@@ -1,3 +1,5 @@
+import type { Document, WithId } from "mongodb"; // #temp #important
+
 export interface IWebSocketService {
     /**
      * это свойство подлежит сокрытию.
@@ -7,21 +9,17 @@ export interface IWebSocketService {
     webSocket: WebSocket | null; // #temp
     connect(): void;
     addEventListener(
-        eventType: string,
-        eventListener: (payload: string) => void,
+        eventType: TWebsocketServiceEventType,
+        handler: TWebsocketServiceEventHandler,
     ): void;
     disconect(): void;
     onopen: (() => void) | null;
     onclose: (() => void) | null;
-    getReadyState(): number | undefined;
+    // getReadyState(): number | undefined;
     send(textContent: string): void;
 }
 
-export type TWebSocketMessage = {
-    textContent: string;
-};
-
-// Такой же тип должен быть на бекенд 
+// Такой же тип должен быть на бекенд
 export type TWebsocketOutgoingMessage =
     | {
           type: "message";
@@ -33,6 +31,37 @@ export type TWebsocketOutgoingMessage =
               action: { type: "insert"; payload: string };
           };
       };
+
+export type TIncommingMessageType = "simple-message" | "all-messages";
+
+export type TWebsocketIncomingMessage =
+    | ({
+          type: "message/current";
+          payload: null;
+      } & {
+          textContent: string;
+          //   connectionId: string;
+      })
+    | ({
+          type: "message/story";
+          payload: WithId<Document>[];
+      } & {
+          textContent: string;
+          //   connectionId: string;
+      });
+
+// Webso
+
+export type TSerializedData = string;
+
+export type TWebsocketServiceEventHandler = (payload: string) => void;
+
+export type TWebsocketServiceEventType =
+    | "message/new"
+    | "story/update"
+    | "open"
+    | "close"
+    | "sent";
 
 export class WebSocketService implements IWebSocketService {
     webSocket: WebSocket | null;
@@ -57,37 +86,26 @@ export class WebSocketService implements IWebSocketService {
     }
 
     addEventListener(
-        eventType: string,
-        eventListener: (payload: string) => void,
+        eventType: TWebsocketServiceEventType,
+        handler: TWebsocketServiceEventHandler,
     ): void {
-        console.log("event type: " + eventType);
-
-        const listeners = this.eventListenersPool.get(eventType);
+        const listeners = this.eventHandlersPool.get(eventType);
 
         if (listeners === undefined) {
-            this.eventListenersPool.set(eventType, []);
+            this.eventHandlersPool.set(eventType, []);
         }
 
-        this.eventListenersPool.get(eventType)?.push(eventListener);
+        this.eventHandlersPool.get(eventType)?.push(handler);
     }
 
-    emit(eventType: string, payload: string): void {
-        console.log({ payload });
-        const listeners = this.eventListenersPool.get(eventType);
-
+    private emit(
+        eventType: TWebsocketServiceEventType,
+        payload: TSerializedData,
+    ): void {
+        const listeners = this.eventHandlersPool.get(eventType);
         if (listeners === undefined) return;
 
         listeners.forEach((elem) => elem(payload));
-
-        console.log(eventType);
-    }
-
-    /**
-     *
-     * @returns number | undefined
-     */
-    getReadyState() {
-        return this.webSocket?.readyState;
     }
 
     disconect(): void {
@@ -105,6 +123,11 @@ export class WebSocketService implements IWebSocketService {
     }
 
     connect(): void {
+        /**
+         * исключение вероятности открытия соединения,
+         * если прредыдущее соединение еще не закрыто, либо
+         * если находится в процесси закрытия или открытия
+         */
         if (
             this.webSocket &&
             (this.webSocket.readyState === this.webSocket.OPEN ||
@@ -114,26 +137,53 @@ export class WebSocketService implements IWebSocketService {
             return;
         }
 
+        /**
+         * получения переменной окружения
+         */
         const host = import.meta.env.VITE_BACKEND_HOST_URL;
+
         console.log({ host });
         this.webSocket = new WebSocket(host || "ws://127.0.0.1:8080");
 
         this.webSocket.onopen = () => {
-            if (this.onopen) {
-                this.onopen();
-
-                this.emit("open", "");
-            }
-
+            this.emit("open", "opened");
             console.log("websocket::open");
         };
+
+        this.webSocket.addEventListener("message", () => {
+            /**
+             * для тестирования подходящего кейса
+             */
+        });
 
         this.webSocket.onmessage = (e) => {
             console.log("websocket::message", e.data);
 
-            const data = e.data as string;
+            const stringdata = e.data as string;
 
-            this.emit("message", data);
+            try {
+                const parsedData = JSON.parse(
+                    stringdata,
+                ) as TWebsocketIncomingMessage;
+
+                if (parsedData.type === "message/story") {
+                    // const payload = JSON.parse(parsedData.payload);
+
+                    console.log({ parsedData });
+
+                    this.emit(
+                        "story/update",
+                        JSON.stringify(parsedData.payload),
+                    );
+
+                    // this.emit("message", parsedData);
+                    return;
+                }
+            } catch (err) {
+                console.log("data parsing error: ", err);
+            }
+
+            this.emit("message/new", stringdata);
         };
 
         this.webSocket.onclose = () => {
@@ -150,10 +200,10 @@ export class WebSocketService implements IWebSocketService {
         };
     }
 
-    private eventListenersPool: Map<string, ((payload: string) => void)[]>;
+    private eventHandlersPool: Map<string, TWebsocketServiceEventHandler[]>;
 
     constructor() {
-        this.eventListenersPool = new Map();
+        this.eventHandlersPool = new Map();
         this.onclose = null;
         this.onopen = null;
         this.webSocket = null;

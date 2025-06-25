@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMainContext } from "../../contexts/main-context/MainContext";
+import type { Document, WithId } from "mongodb";
 
 const MessageDisplay = () => {
     const { webSocketService } = useMainContext();
@@ -10,9 +11,20 @@ const MessageDisplay = () => {
         /**
          *
          */
-        webSocketService.addEventListener("message", (payload) => {
-            console.log(payload);
-            setMesages((curr) => [...curr, payload]);
+        webSocketService.addEventListener("message/new", (payload) => {
+            console.log({ payload: payload, typeof: typeof payload }); // #temp
+
+            setMesages((curr) => [...curr, payload]); // #temp #warning
+        });
+
+        webSocketService.addEventListener("story/update", (payload) => {
+            try {
+                const result = JSON.parse(payload) as WithId<Document>[]; // #temp
+
+                setMesages(result.map((el) => el?.message));
+            } catch (err) {
+                console.log("message display addevent listener error::", err);
+            }
         });
 
         /**
