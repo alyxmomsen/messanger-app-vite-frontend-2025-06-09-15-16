@@ -16,7 +16,7 @@ function App() {
                             <div>web-socket connection</div>
                             <WebsocketConnectionButton />
                         </header>
-                        <div className="flex">
+                        <div className="flex flex-col">
                             <div>
                                 <div className="flex">
                                     <InputComponent />

@@ -67,8 +67,20 @@ button:focus-visible {
     }
 }
 
+ul {
+}
+
+li {
+    list-style: none;
+    text-align: left;
+}
+
 .flex {
     display: flex;
+}
+
+.flex-col {
+    flex-direction: column;
 }
 
 .justify--right {
@@ -79,3 +91,5 @@ button:focus-visible {
 .gap {
     gap: 9px;
 }
+
+/* --- root ----- */
