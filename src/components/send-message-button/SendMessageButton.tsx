@@ -34,7 +34,7 @@ const SendMessageButton = () => {
                     );
                 }}
             >
-                send message
+                &#9989;
             </button>
         </div>
     );

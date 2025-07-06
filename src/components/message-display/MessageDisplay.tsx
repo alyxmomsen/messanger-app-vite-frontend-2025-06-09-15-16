@@ -37,8 +37,8 @@ const MessageDisplay = () => {
         <div>
             <h5>messages</h5>
             <div>
-                {messages.map((elem) => (
-                    <li>{elem}</li>
+                {listReverseUtil(messages).map((elem) => (
+                    <div>{elem}</div>
                 ))}
             </div>
         </div>
@@ -46,3 +46,8 @@ const MessageDisplay = () => {
 };
 
 export default MessageDisplay;
+
+function listReverseUtil(arr: string[]) {
+    const newArr = [...arr];
+    return newArr.reverse();
+}
