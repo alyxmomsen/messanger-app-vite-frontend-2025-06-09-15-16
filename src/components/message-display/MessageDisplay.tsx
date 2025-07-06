@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMainContext } from "../../contexts/main-context/MainContext";
 import type { Document, WithId } from "mongodb";
+import { MessageItem } from "../message-component/MessageItem";
 
 const MessageDisplay = () => {
     const { webSocketService } = useMainContext();
@@ -34,13 +35,10 @@ const MessageDisplay = () => {
     }, []);
 
     return (
-        <div>
-            <h5>messages</h5>
-            <div>
-                {listReverseUtil(messages).map((elem) => (
-                    <div>{elem}</div>
-                ))}
-            </div>
+        <div className="bdr gap flex flex--col">
+            {listReverseUtil(messages).map((elem) => (
+                <MessageItem text={elem} />
+            ))}
         </div>
     );
 };

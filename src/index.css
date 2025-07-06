@@ -71,6 +71,8 @@ button:focus-visible {
     }
 }
 
+/* -start---- root ------ */
+
 ul {
 }
 
@@ -83,7 +85,7 @@ li {
     display: flex;
 }
 
-.flex-col {
+.flex--col {
     flex-direction: column;
 }
 
@@ -96,4 +98,19 @@ li {
     gap: 9px;
 }
 
-/* --- root ----- */
+.bdr {
+    border: 1px solid wheat;
+}
+
+/* -end-- root ----- */
+
+/* -start--- message item ---- */
+
+.message__item {
+    display: flex;
+    padding: 9px;
+    justify-content: left;
+    border: 1px solid;
+}
+
+/* -end--- message item ---- */

@@ -33,33 +33,31 @@ export function WebsocketConnectionButton() {
 
     return (
         <div>
-            <div>
-                {connectButtonDisabled ? (
-                    disconButtonDisabled ? (
-                        <></>
-                    ) : (
-                        <button
-                            disabled={disconButtonDisabled}
-                            onClick={() => {
-                                console.log("action::disconect");
-                                webSocketService.disconect();
-                            }}
-                        >
-                            disconect
-                        </button>
-                    )
+            {connectButtonDisabled ? (
+                disconButtonDisabled ? (
+                    <></>
                 ) : (
                     <button
-                        disabled={connectButtonDisabled}
+                        disabled={disconButtonDisabled}
                         onClick={() => {
-                            console.log("action::connect");
-                            webSocketService.connect();
+                            console.log("action::disconect");
+                            webSocketService.disconect();
                         }}
                     >
-                        connect
+                        disconect
                     </button>
-                )}
-            </div>
+                )
+            ) : (
+                <button
+                    disabled={connectButtonDisabled}
+                    onClick={() => {
+                        console.log("action::connect");
+                        webSocketService.connect();
+                    }}
+                >
+                    connect
+                </button>
+            )}
         </div>
     );
 }
