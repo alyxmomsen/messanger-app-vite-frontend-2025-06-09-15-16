@@ -1,4 +1,4 @@
-import type { Document, WithId } from "mongodb"; // #temp #important
+// import type { Document, WithId } from "mongodb"; // #temp #important
 
 export interface IWebSocketService {
     /**
@@ -8,9 +8,9 @@ export interface IWebSocketService {
      */
     webSocket: WebSocket | null; // #temp
     connect(): void;
-    addEventListener(
-        eventType: TWebsocketServiceEventType,
-        handler: TWebsocketServiceEventHandler,
+    addEventListener<E extends keyof EvntArgsMap>(
+        eventType: E,
+        handler: (args: EvntArgsMap[E]) => void,
     ): void;
     disconect(): void;
     onopen: (() => void) | null;
@@ -18,6 +18,23 @@ export interface IWebSocketService {
     // getReadyState(): number | undefined;
     send(textContent: string): void;
 }
+
+export type TIncomingMessage =
+    | {
+          type: "message/new";
+          payload: {
+              message: string;
+              date: number;
+          };
+      }
+    | {
+          type: "message/story";
+          payload: /* WithId<Document> */ {
+              _id: string;
+              date: number;
+              message: string;
+          }[];
+      };
 
 // Такой же тип должен быть на бекенд
 export type TWebsocketOutgoingMessage =
@@ -32,23 +49,9 @@ export type TWebsocketOutgoingMessage =
           };
       };
 
-export type TIncommingMessageType = "simple-message" | "all-messages";
-
-export type TWebsocketIncomingMessage =
-    | {
-          type: "message/current";
-          payload: string;
-      }
-    | {
-          type: "message/story";
-          payload: WithId<Document>[];
-      };
-
-// Webso
-
 export type TSerializedData = string;
 
-export type TWebsocketServiceEventHandler = (payload: string) => void;
+export type TWebsocketServiceEventListener = () => void;
 
 export type TWebsocketServiceEventType =
     | "message/new"
@@ -57,6 +60,31 @@ export type TWebsocketServiceEventType =
     | "close"
     | "sent";
 
+export type TMessageNewEventListener = (ev: {
+    message: string;
+    date: number;
+}) => void;
+export type TStoryUpdateEventListener = (ev: string) => void;
+export type TOpenEventListener = (ev: string) => void;
+export type TCloseEventListener = (ev: string) => void;
+export type TSentEventListener = (ev: string) => void;
+
+export interface EvntArgsMap {
+    "message/new": { message: string; date: number };
+    "story/update": { message: string; date: number }[];
+    open: string;
+    close: string;
+    sent: string;
+}
+
+export interface IWebsocketServiceEventListenerMap {
+    "message/new": TMessageNewEventListener;
+    "story/update": TStoryUpdateEventListener;
+    open: TOpenEventListener;
+    close: TCloseEventListener;
+    sent: TSentEventListener;
+}
+
 export class WebSocketService implements IWebSocketService {
     webSocket: WebSocket | null;
 
@@ -64,7 +92,7 @@ export class WebSocketService implements IWebSocketService {
     onclose: (() => void) | null;
 
     send(textContent: string): void {
-        console.log("message sent");
+        // console.log("message sent");
 
         const ws = this.webSocket;
         if (ws === null) return;
@@ -76,30 +104,28 @@ export class WebSocketService implements IWebSocketService {
 
         ws.send(JSON.stringify(wsmess));
 
-        this.emit("sent", "");
+        this.emit("sent", "message was sent");
     }
 
-    addEventListener(
-        eventType: TWebsocketServiceEventType,
-        handler: TWebsocketServiceEventHandler,
+    addEventListener<E extends keyof EvntArgsMap>(
+        eventType: E,
+        handler: (args: EvntArgsMap[E]) => void,
     ): void {
-        const listeners = this.eventHandlersPool.get(eventType);
-
-        if (listeners === undefined) {
-            this.eventHandlersPool.set(eventType, []);
-        }
-
-        this.eventHandlersPool.get(eventType)?.push(handler);
+        const listeners = this.eventListenersPool.get(eventType) || [];
+        listeners.push(handler);
+        this.eventListenersPool.set(eventType, listeners);
     }
 
-    private emit(
-        eventType: TWebsocketServiceEventType,
-        payload: TSerializedData,
+    private emit<K extends keyof EvntArgsMap>(
+        eventType: K,
+        ev: EvntArgsMap[K],
     ): void {
-        const listeners = this.eventHandlersPool.get(eventType);
+        const listeners = this.eventListenersPool.get(eventType);
         if (listeners === undefined) return;
 
-        listeners.forEach((elem) => elem(payload));
+        listeners.forEach((elem: (args: EvntArgsMap[K]) => void) => {
+            elem(ev);
+        });
     }
 
     disconect(): void {
@@ -136,72 +162,68 @@ export class WebSocketService implements IWebSocketService {
          */
         const host = import.meta.env.VITE_BACKEND_HOST_URL;
 
-        console.log({ host });
+        // console.log({ host });
         this.webSocket = new WebSocket(host || "ws://127.0.0.1:8080");
 
-        this.webSocket.onopen = () => {
-            this.emit("open", "opened");
-            console.log("websocket::open");
-        };
-
-        this.webSocket.addEventListener("message", () => {
-            /**
-             * для тестирования подходящего кейса
-             */
+        this.webSocket.addEventListener("open", () => {
+            console.log("opened");
+            this.emit("open", "connection is opened");
         });
 
-        this.webSocket.onmessage = (e) => {
-            console.log("websocket::message", e.data);
+        this.webSocket.addEventListener("close", () => {
+            console.log("closed");
+            this.emit("close", "connection is closed");
+        });
 
-            const stringdata = e.data as string;
+        this.webSocket.addEventListener("message", (event) => {
+            console.log(event.data);
 
             try {
-                const parsedData = JSON.parse(
-                    stringdata,
-                ) as TWebsocketIncomingMessage;
-
-                if (parsedData.type === "message/story") {
-                    // const payload = JSON.parse(parsedData.payload);
-
-                    console.log({ parsedData });
-
-                    this.emit(
-                        "story/update",
-                        JSON.stringify(parsedData.payload),
-                    );
-
-                    // this.emit("message", parsedData);
-                    return;
-                }
+                const parsedData = JSON.parse(event.data) as TIncomingMessage;
 
                 console.log({ parsedData });
 
-                this.emit("message/new", parsedData.payload);
+                switch (parsedData.type) {
+                    case "message/new": {
+                        this.emit("message/new", {
+                            message: parsedData.payload.message,
+                            date: parsedData.payload.date,
+                        });
+                        break;
+                    }
+                    case "message/story": {
+                        this.emit("story/update", parsedData.payload);
+                        break;
+                    }
+                }
             } catch (err) {
-                console.log("data parsing error: ", err);
+                // alert(err);
+                console.log("message parse error");
             }
-        };
+        });
 
-        this.webSocket.onclose = () => {
-            console.log("websocket::close");
-            // console.log((this.webSocket?.readyState)?.toString());
-            // this.webSocket = null;
-            this.onclose?.();
-
-            this.emit("close", "");
-        };
-
-        this.webSocket.onerror = () => {
-            console.log("websocket::error");
-        };
+        this.webSocket.addEventListener("error", () => {
+            console.log("error");
+        });
     }
 
-    private eventHandlersPool: Map<string, TWebsocketServiceEventHandler[]>;
+    private eventListenersPool: Map<keyof EvntArgsMap, Array<any>>;
 
     constructor() {
-        this.eventHandlersPool = new Map();
+        this.eventListenersPool = new Map<
+            keyof EvntArgsMap,
+            ((args: EvntArgsMap[keyof EvntArgsMap]) => void)[]
+        >();
         this.onclose = null;
         this.onopen = null;
         this.webSocket = null;
     }
 }
+
+// export type MyMap<K extends keyof IWebsocketServiceEventListenerMap> = Map<K, IWebsocketServiceEventListenerMap[K][]>;
+
+// const myMap: MyMap<keyof IWebsocketServiceEventListenerMap> = new Map();
+
+// myMap.set('message/new', []);
+
+// const arr = myMap.get('message/new')

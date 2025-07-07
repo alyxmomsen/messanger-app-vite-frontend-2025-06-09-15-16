@@ -2,8 +2,20 @@ import { useEffect, useState } from "react";
 import { useMainContext } from "../../contexts/main-context/MainContext";
 
 export const InputComponent = () => {
-    const { messageText, setMessageText, webSocketService } = useMainContext();
+    const {
+        messageText: mt,
+        // setMessageText: smt,
+        webSocketService,
+        setSendMessageButton,
+    } = useMainContext();
     const [inputDisabled, setInputDisabled] = useState(true);
+
+    const [messageText, setMessageText] = useState(mt);
+    console.log("input component");
+
+    // useEffect(() => {
+
+    // } , [messageText]);
 
     useEffect(() => {
         webSocketService.addEventListener("open", () => {
@@ -28,7 +40,18 @@ export const InputComponent = () => {
                 type="text"
                 value={messageText}
                 onInput={(e) => {
-                    setMessageText(e.currentTarget.value);
+                    // e;`
+                    // setMessageText(e.currentTarget.value);
+                    const value = e.currentTarget.value;
+                    console.log(value);
+                    setMessageText((curr) => {
+                        if (curr.length < 1 && value !== "") {
+                            setSendMessageButton(true);
+                        } else if (curr.length > 0 && value == "") {
+                            setSendMessageButton(false);
+                        }
+                        return value;
+                    });
                 }}
                 onKeyUp={(e) => {
                     const key = e.key;

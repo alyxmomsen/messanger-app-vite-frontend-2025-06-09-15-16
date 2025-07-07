@@ -1,4 +1,4 @@
-export const MessageItem = ({ text }: { text: string }) => {
+export const MessageItem = ({ text, date }: { text: string; date: number }) => {
     return (
         <div
             style={{
@@ -6,7 +6,8 @@ export const MessageItem = ({ text }: { text: string }) => {
             }}
             className="message__item"
         >
-            {text}
+            <div>{new Date(date).toDateString()}</div>
+            <div>{text}</div>
         </div>
     );
 };

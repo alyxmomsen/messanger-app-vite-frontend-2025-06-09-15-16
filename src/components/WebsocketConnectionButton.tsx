@@ -16,14 +16,12 @@ export function WebsocketConnectionButton() {
     useEffect(() => {
         console.log("test-component::mounted");
 
-        webSocketService.addEventListener("open", (payload) => {
-            console.log(payload);
+        webSocketService.addEventListener("open", () => {
             setConnectButtonDisabled(true);
             setDisconButtonDisabled(false);
         });
 
-        webSocketService.addEventListener("close", (payload) => {
-            console.log(payload);
+        webSocketService.addEventListener("close", () => {
             setConnectButtonDisabled(false);
             setDisconButtonDisabled(true);
         });

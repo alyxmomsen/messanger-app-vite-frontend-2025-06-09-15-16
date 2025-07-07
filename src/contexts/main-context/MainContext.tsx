@@ -12,6 +12,8 @@ export type TMainContex = {
     setMessageText: (
         value: string,
     ) => void /* React.Dispatch<React.SetStateAction<string>> */;
+    sendMessageButtonState: boolean;
+    setSendMessageButton: (value: boolean) => void;
 };
 
 export const MainContext = createContext<TMainContex | undefined>(undefined);
@@ -24,6 +26,7 @@ export function MainContextProvider({
     const [app] = useState<MyApp>(new MyApp());
     const [wss] = useState<IWebSocketService>(new WebSocketService());
     const [messageInputText, setMessageInputText] = useState("");
+    const [sendMessageButton, setSendMessageButton] = useState(false);
 
     useEffect(() => {
         console.log("main_context::mounted");
@@ -44,6 +47,8 @@ export function MainContextProvider({
                 webSocketService: wss,
                 messageText: messageInputText,
                 setMessageText: setMessageInputText,
+                sendMessageButtonState: sendMessageButton,
+                setSendMessageButton,
             }}
         >
             {children}
