@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useMainContext } from "../../contexts/main-context/MainContext";
 
-const SendMessageButton = () => {
-    const { webSocketService, messageText, sendMessageButtonState } =
+const SendMessageButton = ({ style }: { style: object }) => {
+    const { webSocketService, messageText /*  sendMessageButtonState */ } =
         useMainContext();
 
     const [, /* webSocketServiceIsOpen */ setWebSocketServiceIsOpen] =
@@ -19,23 +19,18 @@ const SendMessageButton = () => {
     }, []);
 
     return (
-        <div>
+        <div style={style}>
             <button
                 style={{
-                    visibility:
-                        !sendMessageButtonState /* || messageText.length <= 0 */
-                            ? "hidden"
-                            : "visible",
+                    opacity: messageText.length < 1 ? 0.4 : 1,
                 }}
                 disabled={
-                    !sendMessageButtonState /* || messageText.length <= 0 */
+                    /* !sendMessageButtonState || */ messageText.length <= 0
                 }
                 onClick={() => {
                     console.log("action::send-message");
                     // #hardcode
-                    webSocketService.send(
-                        `frontend message. test : ${messageText}`,
-                    );
+                    webSocketService.send(messageText);
                 }}
             >
                 &#9989;

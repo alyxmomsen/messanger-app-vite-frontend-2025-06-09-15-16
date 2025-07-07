@@ -1,21 +1,17 @@
 import { useEffect, useState } from "react";
 import { useMainContext } from "../../contexts/main-context/MainContext";
 
-export const InputComponent = () => {
+export const InputComponent = ({ style }: { style: Object }) => {
     const {
-        messageText: mt,
-        // setMessageText: smt,
+        messageText,
+        setMessageText,
         webSocketService,
-        setSendMessageButton,
+        // setSendMessageButton,
     } = useMainContext();
     const [inputDisabled, setInputDisabled] = useState(true);
 
-    const [messageText, setMessageText] = useState(mt);
+    // const [, /* messageText */ setMessageText] = useState(mt);
     console.log("input component");
-
-    // useEffect(() => {
-
-    // } , [messageText]);
 
     useEffect(() => {
         webSocketService.addEventListener("open", () => {
@@ -34,31 +30,39 @@ export const InputComponent = () => {
     }, []);
 
     return (
-        <div>
+        <div style={style}>
             <input
+                style={{ width: "100%" }}
                 disabled={inputDisabled}
                 type="text"
-                value={messageText}
+                value={/* messageText */ messageText}
                 onInput={(e) => {
                     // e;`
                     // setMessageText(e.currentTarget.value);
                     const value = e.currentTarget.value;
                     console.log(value);
-                    setMessageText((curr) => {
-                        if (curr.length < 1 && value !== "") {
-                            setSendMessageButton(true);
-                        } else if (curr.length > 0 && value == "") {
-                            setSendMessageButton(false);
-                        }
-                        return value;
-                    });
+                    // setMessageText((curr) => {
+                    //     if (curr.length < 1 && value !== "") {
+                    //         // setSendMessageButton(true);
+                    //         // smt()
+                    //     } else if (curr.length > 0 && value == "") {
+                    //         setSendMessageButton(false);
+                    //     }
+                    //     return value;
+                    // });
+
+                    setMessageText(value);
                 }}
                 onKeyUp={(e) => {
                     const key = e.key;
 
-                    if (key !== "Enter" || messageText.length < 1) return;
+                    if (
+                        key !== "Enter" ||
+                        /* messageText */ messageText.length < 1
+                    )
+                        return;
 
-                    webSocketService.send(messageText);
+                    webSocketService.send(/* messageText */ messageText);
                 }}
             />
         </div>

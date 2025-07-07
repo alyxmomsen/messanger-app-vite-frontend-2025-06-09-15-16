@@ -45,7 +45,7 @@ const MessageDisplay = () => {
     }, []);
 
     return (
-        <div className="bdr gap flex flex--col">
+        <div className="gap flex flex--col">
             {listReverseUtil(messages).map((elem) => (
                 <MessageItem
                     key={elem.date}
